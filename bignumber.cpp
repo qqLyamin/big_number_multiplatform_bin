@@ -286,7 +286,7 @@ std::ostream& operator<< (std::ostream &OU, const bigNumber & number){
     if (number.isNegative()) OU << "-";
     for (int i = number.arr.size() - 1; i >= 0; --i) {
         for (int j = 0; j < number.arr[i].length(); ++j) {
-            OU << (number.arr[i])[j];
+            OU << (number.arr[i])[j].toLatin1();
         }
     }
     return OU;
