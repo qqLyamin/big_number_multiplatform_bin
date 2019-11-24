@@ -9,7 +9,7 @@ class biSumms
 public:
     biSumms();
 
-    bigNumber getSumm(const bigNumber &, const bigNumber &);
+//    bigNumber getSumm(const bigNumber &, const bigNumber &);
 };
 
 #endif // BISUMMS_H
