@@ -22,24 +22,28 @@ void invert_string( T & tmp ) {
 
 class bigNumber
 {
-    std::vector<QString> arr;
+    std::vector<ulonglong> arr;
+    std::vector<QString> arrStrBinary;
     bool Negative = false;
+    bool Trash = false;
 public:
     bigNumber(){
         arr.push_back( 0 );
     }
     bigNumber( const QString & income );
 
-//    bigNumber & operator+( const bigNumber & other );
+    bigNumber & operator+( const bigNumber & other );
     bigNumber & operator=( const bigNumber & other );
     bool operator->*( const bigNumber & other );//thats MOD operator >
     bool operator>( const bigNumber & other );
 
     friend bool operator==( const bigNumber & left, const bigNumber & right );
+    friend bool operator&=( const bigNumber & left, const bigNumber & right ); //thats MOD operator ==
     friend std::ostream & operator<<( std::ostream &out, const bigNumber & number );
     quint getSize() const;
     bool isNegative() const;
     bool isPositive() const;
+    bool isTrash() const;
 
     void setNegative();
     void setPositive();

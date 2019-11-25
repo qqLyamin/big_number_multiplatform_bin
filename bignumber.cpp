@@ -1,6 +1,7 @@
 #include "bignumber.h"
 #include <QDebug>
 #include <iostream>
+#include <math.h>
 
 bool even( const QString & incomeNumber ) {
     int last = incomeNumber.length() - 1;
@@ -51,6 +52,18 @@ QString divide( const QString & incomeNumber ) {
     return answer;
 }
 
+ulonglong fromBinToDecimal( const QString & incomeNumber ) {
+    ulonglong value = 0;
+
+    int degree = incomeNumber.length() - 1;
+    for (int i = 0; i <= degree; ++i) {
+        if (incomeNumber[i] == '1') {
+            value += pow(2, degree - i);
+        }
+    }
+    return value;
+}
+
 bigNumber::bigNumber(const QString & income)
 {
     bool isValid = true;
@@ -74,7 +87,9 @@ bigNumber::bigNumber(const QString & income)
         while (incomeCopy.length() > 1 || (incomeCopy[0] != 1 || incomeCopy[0] != 0)) {
             if (i == SIZE_OF_POINTER * 8) {
                 invert_string(tmp);
-                arr.push_back(tmp);
+                arrStrBinary.push_back(tmp);
+                ulonglong temp = fromBinToDecimal(tmp);
+                arr.push_back(temp);
                 i = 0;
                 tmp = "";
             }
@@ -83,130 +98,236 @@ bigNumber::bigNumber(const QString & income)
                 incomeCopy = divide(incomeCopy);
             } else {
                 tmp += "1";
-                incomeCopy[incomeCopy.length() - 1] = (char)((incomeCopy[incomeCopy.length() - 1].digitValue() - 1) + 48);
+                incomeCopy[incomeCopy.length() - 1] = static_cast<char>(((incomeCopy[incomeCopy.length() - 1].digitValue() - 1) + 48));
                 incomeCopy = divide(incomeCopy);
             }
             if (incomeCopy.length() == 1 && incomeCopy[0] == 48) break;
             i++;
         }
         invert_string(tmp);
-        arr.push_back(tmp);
+        arrStrBinary.push_back(tmp);
+        ulonglong temp = fromBinToDecimal(tmp);
+        arr.push_back(temp);
+    } else {
+        Trash = true;
+        arr.push_back(0);
+        arrStrBinary.push_back("0");
+        Negative = false;
     }
 }
 
 
-//bigNumber & bigNumber::operator+(const bigNumber & other)
-//{
-//    int saturation = 0;
-//    int negativeSaturation = 0;
-//    short maxSize;
-//    bool isNegativeAnswer = false;
-//    maxSize = arr.size() > other.arr.size() ? arr.size() : other.arr.size();
+bigNumber & bigNumber::operator+(const bigNumber & other)
+{
+    if (this->isTrash() || other.isTrash()) {
+        if (other.isTrash() && !this->isTrash()) return *this;
+        if (!other.isTrash() && this->isTrash()) {
+            this->arr = other.arr;
+            this->Trash = other.Trash;
+            this->Negative = other.Negative;
+            this->arrStrBinary = other.arrStrBinary;
+        }
+        if (other.isTrash() && this->isTrash()) {
+            this->arr.clear();
+            this->arr.push_back(0);
+            this->Negative = false;
+            this->Trash = Negative;
+            this->arrStrBinary.clear();
+            this->arrStrBinary.push_back("0");
+        }
+    }
+    ulonglong saturation = 0;
+    ulonglong negativeSaturation = 0;
+    quint maxSize;
+    bigNumber otherCopy = other;
 
-//    if (this->isPositive() && other.isPositive()) {
-//        for ( int i = 0 ; i < maxSize; ++i ) {
-//            short tmp = arr[i];
-//            this->arr[i] = (arr[i] + other.arr[i] + saturation) % 10000;
-//            saturation = (tmp + other.arr[i] + saturation) / 10000;
-//            isNegativeAnswer = false;
-//        }
-//    }
+    bool isNegativeAnswer = false;
+    maxSize = arr.size() > other.arr.size() ? arr.size() : other.arr.size();
 
-//    if (this->isNegative() && other.isNegative()) {
-//        for ( int i = 0 ; i < maxSize; ++i ) {
-//            short tmp = arr[i];
-//            this->arr[i] = (arr[i] + other.arr[i] + saturation) % 10000;
-//            saturation = (tmp + other.arr[i] + saturation) / 10000;
-//            isNegativeAnswer = true;
-//        }
-//    }
+    if (this->isPositive() && other.isPositive()) {
+        for ( quint i = 0 ; i < maxSize; ++i ) {
+            int step = 1;
+            ulonglong tmp = 0;
+            while (step < 20) {
+                ulonglong degree = static_cast<ulonglong>(pow(10, step));
+                ulonglong iter = ((arr[i] % degree - arr[i] % (degree / 10)) + (other.arr[i] % degree - other.arr[i] % (degree / 10))) / (degree / 10);
 
-//    if (this->isPositive() && other.isNegative()) {
-//        bigNumber tmp = other;
-//        for ( int i = 0 ; i < maxSize; ++i ) {
-//            if (*this ->* tmp) { //вычитаем всегда ИЗ arr[i]
-//                if (arr[i] > tmp.arr[i]) { //eсли мы больше ВЫЧИТАЕМОГО
-//                    arr[i] = arr[i] - tmp.arr[i];
-//                } else if (arr[i] == tmp.arr[i]) {
-//                    arr[i] = 0;
-//                } else if (tmp.arr[i] > arr[i]) { //Если армия врага больше нашей
-//                    arr[i] = arr[i] + 10000 - tmp.arr[i];
-//                    tmp.arr[i + 1] += 1;
-//                }
-//            } else { //вычитаем всегда ИЗ tmp
-//                if (tmp.arr[i] > arr[i]) { //eсли мы больше ВЫЧИТАЕМОГО
-//                    arr[i] = tmp.arr[i] - arr[i];
-//                } else if (arr[i] == tmp.arr[i]) {
-//                    arr[i] = 0;
-//                } else if (tmp.arr[i] > arr[i]) { //Если армия врага больше нашей
-//                    arr[i] = tmp.arr[i] + 10000 - arr[i];
-//                    arr[i + 1] += 1;
-//                }
-//                isNegativeAnswer = true;
-//            }
-//        }
-//    }
+                if (iter > 9) {
+                    if (step == 19 && iter % 10 == 0) {
+                        saturation = 1; break;
+                    }
+                    tmp += iter % 10 * (degree / 10) + saturation * (degree / 10);
+                    saturation = 1;
+                } else {
+                    tmp += iter * (degree / 10) + saturation * (degree / 10);
+                    saturation = 0;
+                }
+                step++;
+            }
+            this->arr[i] = tmp;
+        }
+        isNegativeAnswer = false;
+    }
 
-//    if (this->isNegative() && other.isPositive()) {
-//        bigNumber tmp = other;
-//        for ( int i = 0 ; i < maxSize; ++i ) {
-//            if (*this ->* tmp) { //вычитаем всегда ИЗ arr[i]
-//                if (arr[i] > tmp.arr[i]) { //eсли мы больше ВЫЧИТАЕМОГО
-//                    arr[i] = arr[i] - tmp.arr[i];
-//                } else if (arr[i] == tmp.arr[i]) {
-//                    arr[i] = 0;
-//                } else if (tmp.arr[i] > arr[i]) { //Если армия врага больше нашей
-//                    arr[i] = arr[i] + 10000 - tmp.arr[i];
-//                    tmp.arr[i + 1] += 1;
-//                }
-//                isNegativeAnswer = true;
-//            } else { //вычитаем всегда ИЗ tmp
-//                if (tmp.arr[i] > arr[i]) { //eсли мы больше ВЫЧИТАЕМОГО
-//                    arr[i] = tmp.arr[i] - arr[i];
-//                } else if (arr[i] == tmp.arr[i]) {
-//                    arr[i] = 0;
-//                } else if (arr[i] > tmp.arr[i]) { //Если армия врага больше нашей
-//                    arr[i] = tmp.arr[i] + 10000 - arr[i];
-//                    arr[i + 1] += 1;
-//                }
-//            }
-//        }
-//    }
+    if (this->isNegative() && other.isNegative()) {
+        for ( quint i = 0 ; i < maxSize; ++i ) {
+            int step = 1;
+            ulonglong tmp = 0;
+            while (step < 20) {
+                ulonglong degree = static_cast<ulonglong>(pow(10, step));
+                ulonglong iter = ((arr[i] % degree - arr[i] % (degree / 10)) + (other.arr[i] % degree - other.arr[i] % (degree / 10))) / (degree / 10);
 
-//    if (this->arr.size() == 1 && this->arr[0] == 0) isNegativeAnswer = false;
+                if (iter > 9) {
+                    if (step == 19 && iter % 10 == 0) {
+                        saturation = 1; break;
+                    }
+                    tmp += iter % 10 * (degree / 10) + saturation * (degree / 10);
+                    saturation = 1;
+                } else {
+                    tmp += iter * (degree / 10) + saturation * (degree / 10);
+                    saturation = 0;
+                }
+                step++;
+            }
+            this->arr[i] = tmp;
+        }
+        isNegativeAnswer = true;
+    }
 
-//    if (isNegativeAnswer) {
-//        this->setNegative();
-//    } else {
-//        this->setPositive();
-//    }
+    if (this->isPositive() && other.isNegative()) {
+        int step = 1;
+        ulonglong tmp = 0;
+        if (*this ->* otherCopy) {
+            for ( quint i = 0 ; i < maxSize; ++i ) {
+                if (arr[i] < otherCopy.arr[i]) {
+                    if (SIZE_OF_POINTER == 4) {
+                        tmp = 4294967294 - otherCopy.arr[i] + arr[i] + 1;
+                    }
+                    if (SIZE_OF_POINTER == 8) {
+                        tmp = 18446744073709551614 - otherCopy.arr[i] + arr[i] + 1;
+                    }
+                    arr[i + 1] -= 1;
+                }
 
-//    return * this;
-//}
+                if (arr[i] > otherCopy.arr[i]) {
+                    tmp = arr[i] - otherCopy.arr[i];
+                }
+
+                if (arr[i] == otherCopy.arr[i]) {
+                    tmp = 0;
+                }
+                this->arr[i] = tmp;
+            }
+            isNegativeAnswer = false;
+        } else if (otherCopy &= *this) {
+            isNegativeAnswer = false;
+            this->arr.clear();
+            this->arr.push_back(0);
+        } else {
+            for ( quint i = 0 ; i < maxSize; ++i ) {
+                if (arr[i] > otherCopy.arr[i]) {
+                    if (SIZE_OF_POINTER == 4) {
+                        tmp = 4294967294 - arr[i] + otherCopy.arr[i] + 1;
+                    }
+                    if (SIZE_OF_POINTER == 8) {
+                        tmp = 18446744073709551614 - arr[i] + otherCopy.arr[i] + 1;
+                    }
+                    otherCopy.arr[i + 1] -= 1;
+                }
+
+                if (arr[i] < otherCopy.arr[i]) {
+                    tmp = otherCopy.arr[i] - arr[i];
+                }
+
+                if (arr[i] == otherCopy.arr[i]) {
+                    tmp = 0;
+                }
+                this->arr[i] = tmp;
+            }
+            isNegativeAnswer = true;
+        }
+    }
+
+
+    if (this->isNegative() && other.isPositive()) {
+            int step = 1;
+            ulonglong tmp = 0;
+            if (*this ->* otherCopy) {
+                for ( quint i = 0 ; i < maxSize; ++i ) {
+                    if (arr[i] < otherCopy.arr[i]) {
+                        if (SIZE_OF_POINTER == 4) {
+                            tmp = 4294967294 - otherCopy.arr[i] + arr[i] + 1;
+                        }
+                        if (SIZE_OF_POINTER == 8) {
+                            tmp = 18446744073709551614 - otherCopy.arr[i] + arr[i] + 1;
+                        }
+                        arr[i + 1] -= 1;
+                    }
+
+                    if (arr[i] > otherCopy.arr[i]) {
+                        tmp = arr[i] - otherCopy.arr[i];
+                    }
+
+                    if (arr[i] == otherCopy.arr[i]) {
+                        tmp = 0;
+                    }
+                    this->arr[i] = tmp;
+                }
+                isNegativeAnswer = true;
+            } else if (otherCopy &= *this) {
+                isNegativeAnswer = false;
+                this->arr.clear();
+                this->arr.push_back(0);
+            } else {
+                for ( quint i = 0 ; i < maxSize; ++i ) {
+                    if (arr[i] > otherCopy.arr[i]) {
+                        if (SIZE_OF_POINTER == 4) {
+                            tmp = 4294967294 - arr[i] + otherCopy.arr[i] + 1;
+                        }
+                        if (SIZE_OF_POINTER == 8) {
+                            tmp = 18446744073709551614 - arr[i] + otherCopy.arr[i] + 1;
+                        }
+                        otherCopy.arr[i + 1] -= 1;
+                    }
+
+                    if (arr[i] < otherCopy.arr[i]) {
+                        tmp = otherCopy.arr[i] - arr[i];
+                    }
+
+                    if (arr[i] == otherCopy.arr[i]) {
+                        tmp = 0;
+                    }
+                    this->arr[i] = tmp;
+                }
+                isNegativeAnswer = false;
+            }
+        }
+
+
+    if (this->arr.size() == 1 && this->arr[0] == 0) isNegativeAnswer = false;
+
+    if (isNegativeAnswer) {
+        this->setNegative();
+    } else {
+        this->setPositive();
+    }
+
+    return * this;
+}
 
 bigNumber & bigNumber::operator=(const bigNumber & other)
 {
     Negative = other.Negative;
-    arr[0] = other.arr[0];
-    for (int i = 1; i < other.arr.size(); ++i) {
-        arr.push_back(other.arr[i]);
-    }
+    this->arr = other.arr;
     return * this;
 }
 
 bool bigNumber::operator->*(const bigNumber & other)//thats MOD operator >
 {
     if (this->arr.size() == other.arr.size()) {
-        for (int i = arr.size(); i > 0; --i) {
-            if (i == arr.size() && this->arr[i].length() > other.arr[i].length()) return true;
-            if (i == arr.size() && this->arr[i].length() < other.arr[i].length()) return false;
-
-            if (this->arr[i].length() == other.arr[i].length()) {
-                for (int j = arr[i].length() - 1; j >= 0; --j) {
-                    if (arr[i][j] == other.arr[i][j]) continue;
-                    if (arr[i][j] > other.arr[i][j]) return true;
-                    if (arr[i][j] < other.arr[i][j]) return false;
-                }
+        for (quint i = arr.size(); i > 0; --i) {
+            if ( arr[i - 1] != other.arr[i - 1] ) {
+                return arr[i - 1] > other.arr[i - 1];
             }
         }
         return false;
@@ -227,35 +348,22 @@ bool bigNumber::operator>(const bigNumber &other)
 
 
     if (this->arr.size() == other.arr.size() && this->isNegative() && other.isNegative()) {
-        for (int i = arr.size(); i >= 0; --i) {
-            if (i == arr.size() && this->arr[0].length() > other.arr[0].length()) return false;
-            if (i == arr.size() && this->arr[0].length() < other.arr[0].length()) return true;
-
-            if (this->arr[0].length() == other.arr[0].length()) {
-                for (int j = 0; j < arr[i].length(); ++j) {
-                    if (this->arr[i][j] == this->arr[i][j]) continue;
-                    if (this->arr[i][j] > this->arr[i][j]) return false;
-                    if (this->arr[i][j] < this->arr[i][j]) return true;
-                }
+        for (quint i = arr.size() - 1; i >= 0; --i) {
+            if (arr[i] != other.arr[i]) {
+                return arr[i] < other.arr[i];
             }
         }
     }
 
     if (this->arr.size() == other.arr.size() && this->isPositive() && other.isPositive()) {
-        for (int i = arr.size() - 1; i >= 0; --i) {
-            if (i == arr.size() && this->arr[0].length() > other.arr[0].length()) return true;
-            if (i == arr.size() && this->arr[0].length() < other.arr[0].length()) return false;
-
-            if (this->arr[0].length() == other.arr[0].length()) {
-                for (int j = 0; j < arr[i].length(); ++j) {
-                    if (this->arr[i][j] == this->arr[i][j]) continue;
-                    if (this->arr[i][j] > this->arr[i][j]) return true;
-                    if (this->arr[i][j] < this->arr[i][j]) return false;
-                }
+        for (quint i = arr.size() - 1; i >= 0; --i) {
+            if (arr[i] != other.arr[i]) {
+                return arr[i] > other.arr[i];
             }
         }
     }
 }
+
 
 quint bigNumber::getSize() const
 {
@@ -272,6 +380,11 @@ bool bigNumber::isPositive() const
     return !Negative;
 }
 
+bool bigNumber::isTrash() const
+{
+    return Trash;
+}
+
 void bigNumber::setNegative()
 {
     this->Negative = true;
@@ -285,8 +398,8 @@ void bigNumber::setPositive()
 std::ostream& operator<< (std::ostream &OU, const bigNumber & number){
     if (number.isNegative()) OU << "-";
     for (int i = number.arr.size() - 1; i >= 0; --i) {
-        for (int j = 0; j < number.arr[i].length(); ++j) {
-            OU << (number.arr[i])[j].toLatin1();
+        for (int j = 0; j < number.arrStrBinary[i].length(); ++j) {
+            OU << (number.arrStrBinary[i])[j].toLatin1();
         }
     }
     return OU;
@@ -298,10 +411,21 @@ bool operator==(const bigNumber &left, const bigNumber &right)
     if (left.arr.size() != right.arr.size()) return false;
 
     for (int i = left.arr.size() - 1; i >= 0; --i) {
-        if (i == 0 && left.arr[i].length() != right.arr[i].length()) return false;
+        if (left.arr[i] != right.arr[i]) {
+            return false;
+        }
+    }
 
-        for (int j = 0; j < left.arr[i].length() - 1; ++j) {
-            if (left.arr[i][j] != left.arr[i][j]) return false;
+    return true;
+}
+
+bool operator&=(const bigNumber &left, const bigNumber &right)
+{
+    if (left.arr.size() != right.arr.size()) return false;
+
+    for (int i = left.arr.size() - 1; i >= 0; --i) {
+        if (left.arr[i] != right.arr[i]) {
+            return false;
         }
     }
 

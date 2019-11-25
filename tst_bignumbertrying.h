@@ -1,56 +1,56 @@
-//#include <QtTest/QTest>
-//#include <QString>
-//#include <iostream>
+#include <QtTest/QTest>
+#include <QString>
+#include <iostream>
 
-//#include "bignumber.h"
-//#include "bisumms.h"
+#include "bignumber.h"
+#include "bisumms.h"
 
-//class bigNumberTrying : public QObject
-//{
-//    Q_OBJECT
+class bigNumberTrying : public QObject
+{
+    Q_OBJECT
 
-//    int a;
-//public:
-//    bigNumberTrying();
+    int a;
+public:
+    bigNumberTrying();
 
-//private slots:
+private slots:
 
-//    //POSITIVE:
-//    void positiveSameNumbers();
-//    void positiveDifferentNumbers();
-//    void positiveDifferentNumbersSwitched();
+    //POSITIVE:
+    void positiveSameNumbers();
+    void positiveDifferentNumbers();
+    void positiveDifferentNumbersSwitched();
 
-//    //POSITIVE + NEGATIVE:
-//    void positiveNegative();
-//    void negativePositive();
+    //POSITIVE + NEGATIVE:
+    void positiveNegative();
+    void negativePositive();
 
-//    void positiveNegativeSwitched();
-//    void negativePositiveSwitched();
+    void positiveNegativeSwitched();
+    void negativePositiveSwitched();
 
-//    void positiveNegativeSame();
-//    void negativePositiveSame();
+    void positiveNegativeSame();
+    void negativePositiveSame();
 
-//    //TWO NEGATIVE:
-//    void negativeNegative();
-//    void negativeNegativeSwitched();
-//    void negativeNegativeSame();
+    //TWO NEGATIVE:
+    void negativeNegative();
+    void negativeNegativeSwitched();
+    void negativeNegativeSame();
 
-//    //TRASH WITH NORMAL:
-//    void trashPlusNormal();
-//    void normalPlusTrash();
-//    void trashPlusTrash();
+    //TRASH WITH NORMAL:
+    void trashPlusNormal();
+    void normalPlusTrash();
+    void trashPlusTrash();
 
-//    //ZEROS WITH OK:
-//    void zeroPlusOk();
-//    void okPlusZero();
-//    void zeroPlusZero();
+    //ZEROS WITH OK:
+    void zeroPlusOk();
+    void okPlusZero();
+    void zeroPlusZero();
 
-//    //EXTREMAL SITUATIONS:
-//    void ninesPlusOne();
-//    void ninesPlusOneSwitched();
-//    void millionPlusOneNegative();
-//    void millionPlusOneNegativeSwitched();
-//    void millionNegativePlusOnePositive();
+    //EXTREMAL SITUATIONS:
+    void ninesPlusOne();
+    void ninesPlusOneSwitched();
+    void millionPlusOneNegative();
+    void millionPlusOneNegativeSwitched();
+    void millionNegativePlusOnePositive();
 
 //DESIGN TIME CASES:
 //    void caseNines();
@@ -90,4 +90,4 @@
 //    void caseWithNegativeSignBothBig();
 
 //    void caseWrongMinus();
-//};
+};
