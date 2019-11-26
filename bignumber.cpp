@@ -180,9 +180,14 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                         part = part / 10;
                         otherPart = otherPart / 10;
                     }
-                    iter = part + otherPart;
-                    //if (iter > 9) saturation = 1; // HERE CAN BE THE PROBLEM!!!!!!!!
-                    iter = iter / 10;
+
+                    if (lastStep == 22) {
+                        iter = part  + otherPart;
+                        //if (iter > 9) saturation = 1; // HERE CAN BE THE PROBLEM!!!!!!!!
+                        iter = iter / 10;
+                    } else {
+                        iter = part / 10 + otherPart / 10;
+                    }
                 }
                 if (step == lastStep - 1) {
                     overloadfinder = true;
@@ -248,16 +253,37 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                     if (step != lastStep - 2) {
                         tmp += iter * (degree / 10) + saturation * (degree / 10);
                     } else {
-                        tmp += iter * degree;
-                        saturation = 0;
-                        break;
+                        if (lastStep == 12 && overloadfinder && step == 10 && saturation == 0) {
+                            if (tmp + iter * degree > 4294967295) {
+                                tmp = tmp + iter * degree - 4294967295 - 1;
+                                saturation = 1;
+                            } else {
+                                tmp = tmp + (iter + saturation) * degree;
+                                saturation = 0;
+                            }
+                        } else if (lastStep == 12 && overloadfinder && step == 10 && saturation == 1) {
+                            if (tmp + (iter + saturation) * degree > 4294967295) {
+                                tmp = tmp + (iter + saturation) * degree - 4294967295 - 1;
+                                saturation = 1;
+                            } else {
+                                tmp = tmp + (iter + saturation) * degree;
+                                saturation = 0;
+                            }
+                        } else {
+                            tmp += iter * degree;
+                            saturation = 0;
+                            break;
+                        }
                     }
-                    saturation = 0;
+                    if (lastStep == 12 && overloadfinder && step == 10 && saturation == 1) {
+                        saturation = 1;
+                    } else {
+                        saturation = 0;
+                    }
                 }
                 step++;
             }
             if (overloaded) {
-                this->arr[i] = tmp;
                 if (arr.size() > i + 1) {
                     this->arr[i + 1] += 1;
                 } else {
@@ -304,9 +330,14 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                         part = part / 10;
                         otherPart = otherPart / 10;
                     }
-                    iter = part + otherPart;
-                    //if (iter > 9) saturation = 1; // HERE CAN BE THE PROBLEM!!!!!!!!
-                    iter = iter / 10;
+
+                    if (lastStep == 22) {
+                        iter = part  + otherPart;
+                        //if (iter > 9) saturation = 1; // HERE CAN BE THE PROBLEM!!!!!!!!
+                        iter = iter / 10;
+                    } else {
+                        iter = part / 10 + otherPart / 10;
+                    }
                 }
                 if (step == lastStep - 1) {
                     overloadfinder = true;
@@ -372,16 +403,37 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                     if (step != lastStep - 2) {
                         tmp += iter * (degree / 10) + saturation * (degree / 10);
                     } else {
-                        tmp += iter * degree;
-                        saturation = 0;
-                        break;
+                        if (lastStep == 12 && overloadfinder && step == 10 && saturation == 0) {
+                            if (tmp + iter * degree > 4294967295) {
+                                tmp = tmp + iter * degree - 4294967295 - 1;
+                                saturation = 1;
+                            } else {
+                                tmp = tmp + (iter + saturation) * degree;
+                                saturation = 0;
+                            }
+                        } else if (lastStep == 12 && overloadfinder && step == 10 && saturation == 1) {
+                            if (tmp + (iter + saturation) * degree > 4294967295) {
+                                tmp = tmp + (iter + saturation) * degree - 4294967295 - 1;
+                                saturation = 1;
+                            } else {
+                                tmp = tmp + (iter + saturation) * degree;
+                                saturation = 0;
+                            }
+                        } else {
+                            tmp += iter * degree;
+                            saturation = 0;
+                            break;
+                        }
                     }
-                    saturation = 0;
+                    if (lastStep == 12 && overloadfinder && step == 10 && saturation == 1) {
+                        saturation = 1;
+                    } else {
+                        saturation = 0;
+                    }
                 }
                 step++;
             }
             if (overloaded) {
-                this->arr[i] = tmp;
                 if (arr.size() > i + 1) {
                     this->arr[i + 1] += 1;
                 } else {

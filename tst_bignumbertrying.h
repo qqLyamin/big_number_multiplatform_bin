@@ -35,6 +35,8 @@ private slots:
     //TWO NEGATIVE:
     void negativeNegative();
     void negativeNegativeSwitched();
+    void negativeSameNumbersBig();
+    void negativeDifferentNumbersBig();
     void negativeNegativeSame();
 
     //TRASH WITH NORMAL:
