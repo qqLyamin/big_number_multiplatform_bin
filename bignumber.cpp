@@ -3,6 +3,7 @@
 #include <iostream>
 #include <math.h>
 
+
 bool even( const QString & incomeNumber ) {
     int last = incomeNumber.length() - 1;
     if ( incomeNumber[last].isNumber() ) {
@@ -81,11 +82,18 @@ bigNumber::bigNumber(const QString & income)
     if (isValid && this->isNegative()) incomeCopy.remove(0, 1);
 
     QString tmp = "";
-    QString divideTmp = "";
+    bool overloaded = false;
     if (isValid) {
         int i = 0;
         while (incomeCopy.length() > 1 || (incomeCopy[0] != 1 || incomeCopy[0] != 0)) {
             if (i == SIZE_OF_POINTER * 8) {
+                if (!tmp.contains('0')) {
+                    overloaded = true;
+                    arrStrBinary.push_back("");
+                    arr.push_back(0);
+                    i = 0;
+                    continue;
+                }
                 invert_string(tmp);
                 arrStrBinary.push_back(tmp);
                 ulonglong temp = fromBinToDecimal(tmp);
@@ -93,10 +101,11 @@ bigNumber::bigNumber(const QString & income)
                 i = 0;
                 tmp = "";
             }
-            if (even(incomeCopy)) {
+            if (even(incomeCopy) && !overloaded) {
                 tmp += "0";
                 incomeCopy = divide(incomeCopy);
             } else {
+                if (overloaded) overloaded = false;
                 tmp += "1";
                 incomeCopy[incomeCopy.length() - 1] = static_cast<char>(((incomeCopy[incomeCopy.length() - 1].digitValue() - 1) + 48));
                 incomeCopy = divide(incomeCopy);
@@ -136,8 +145,9 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
             this->arrStrBinary.push_back("0");
         }
     }
+    int lastStep = SIZE_OF_POINTER == 4 ? 12 : 22;
+
     ulonglong saturation = 0;
-    ulonglong negativeSaturation = 0;
     quint maxSize;
     bigNumber otherCopy = other;
 
@@ -148,21 +158,120 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
         for ( quint i = 0 ; i < maxSize; ++i ) {
             int step = 1;
             ulonglong tmp = 0;
-            while (step < 20) {
-                ulonglong degree = static_cast<ulonglong>(pow(10, step));
-                ulonglong iter = ((arr[i] % degree - arr[i] % (degree / 10)) + (other.arr[i] % degree - other.arr[i] % (degree / 10))) / (degree / 10);
+            bool overloadfinder = false;
+            bool overloaded = false;
+            ulonglong degree = static_cast<ulonglong>(pow(10, 0));
+            while (step < lastStep) {
+                if (step == lastStep - 1 && saturation == 1) break;
 
+                if (step != lastStep - 2) {
+                    degree = static_cast<ulonglong>(pow(10, step));
+                }
+                ulonglong part = 0;
+                ulonglong otherPart = 0;
+                ulonglong iter = 0;
+                if (step < lastStep - 2) {
+                    iter = (arr[i] % degree - arr[i] % (degree / 10))/ (degree / 10) + (other.arr[i] % degree - other.arr[i] % (degree / 10))/ (degree / 10);
+                } else {
+                    overloadfinder = true;
+                    part = arr[i];
+                    otherPart = other.arr[i];
+                    for (int i = 0; i < step - 2; i++) {
+                        part = part / 10;
+                        otherPart = otherPart / 10;
+                    }
+                    iter = part + otherPart;
+                    //if (iter > 9) saturation = 1; // HERE CAN BE THE PROBLEM!!!!!!!!
+                    iter = iter / 10;
+                }
+                if (step == lastStep - 1) {
+                    overloadfinder = true;
+                }
                 if (iter > 9) {
-                    if (step == 19 && iter % 10 == 0) {
+                    if (overloadfinder) { // если мы на последнем шаге
+                        if (lastStep == 22) { // в системе х64
+                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) < tmp ) {
+                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10));
+                                overloaded = true;
+                                break;
+                            }
+                            if ((tmp + iter * (degree / 10) + saturation * (degree / 10)) < tmp ) {
+                                tmp = (tmp + iter * ( degree / 10) + saturation * (degree / 10));
+                                overloaded = true;
+                                break;
+                            }
+                        } else if (lastStep == 12) { //если система х32
+                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
+                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10)) - 4294967295;
+                                overloaded = true;
+                                break;
+                            }
+                            if ((tmp + iter * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
+                                tmp = (tmp + iter * (degree / 10) + saturation * (degree / 10)) - 4294967295;
+                                overloaded = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (step == lastStep - 1 && iter % 10 == 0) {
                         saturation = 1; break;
                     }
                     tmp += iter % 10 * (degree / 10) + saturation * (degree / 10);
-                    saturation = 1;
+                    if (step != lastStep - 1) saturation = 1;
                 } else {
-                    tmp += iter * (degree / 10) + saturation * (degree / 10);
+                    if (overloadfinder) { // если мы на последнем шаге
+                        if (lastStep == 22) { // в системе х64
+                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) < tmp ) {
+                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10)) - 1;
+                                overloaded = true;
+                                break;
+                            }
+                            if ((tmp + iter * (degree / 10) + saturation * (degree / 10)) < tmp ) {
+                                tmp = (tmp + iter * ( degree / 10) + saturation * (degree / 10)) - 1;
+                                overloaded = true;
+                                break;
+                            }
+                        } else if (lastStep == 12) { //если система х32
+                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
+                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10)) - 4294967295 - 1;
+                                overloaded = true;
+                                break;
+                            }
+                            if ((tmp + iter * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
+                                tmp = (tmp + iter * (degree / 10) + saturation * (degree / 10)) - 4294967295 - 1;
+                                overloaded = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (iter == 0 && saturation == 0 && step == lastStep - 1) break;
+                    if (step != lastStep - 2) {
+                        tmp += iter * (degree / 10) + saturation * (degree / 10);
+                    } else {
+                        tmp += iter * degree;
+                        saturation = 0;
+                        break;
+                    }
                     saturation = 0;
                 }
                 step++;
+            }
+            if (overloaded) {
+                this->arr[i] = tmp;
+                if (arr.size() > i + 1) {
+                    this->arr[i + 1] += 1;
+                } else {
+                    arr.push_back(1);
+                }
+            }
+
+            if (saturation) {
+                if (arr.size() > i + 1) {
+                    this->arr[i + 1] += 1;
+                    saturation = 0;
+                } else {
+                    arr.push_back(1);
+                }
             }
             this->arr[i] = tmp;
         }
@@ -173,21 +282,120 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
         for ( quint i = 0 ; i < maxSize; ++i ) {
             int step = 1;
             ulonglong tmp = 0;
-            while (step < 20) {
-                ulonglong degree = static_cast<ulonglong>(pow(10, step));
-                ulonglong iter = ((arr[i] % degree - arr[i] % (degree / 10)) + (other.arr[i] % degree - other.arr[i] % (degree / 10))) / (degree / 10);
+            bool overloadfinder = false;
+            bool overloaded = false;
+            ulonglong degree = static_cast<ulonglong>(pow(10, 0));
+            while (step < lastStep) {
+                if (step == lastStep - 1 && saturation == 1) break;
 
+                if (step != lastStep - 2) {
+                    degree = static_cast<ulonglong>(pow(10, step));
+                }
+                ulonglong part = 0;
+                ulonglong otherPart = 0;
+                ulonglong iter = 0;
+                if (step < lastStep - 2) {
+                    iter = (arr[i] % degree - arr[i] % (degree / 10))/ (degree / 10) + (other.arr[i] % degree - other.arr[i] % (degree / 10))/ (degree / 10);
+                } else {
+                    overloadfinder = true;
+                    part = arr[i];
+                    otherPart = other.arr[i];
+                    for (int i = 0; i < step - 2; i++) {
+                        part = part / 10;
+                        otherPart = otherPart / 10;
+                    }
+                    iter = part + otherPart;
+                    //if (iter > 9) saturation = 1; // HERE CAN BE THE PROBLEM!!!!!!!!
+                    iter = iter / 10;
+                }
+                if (step == lastStep - 1) {
+                    overloadfinder = true;
+                }
                 if (iter > 9) {
-                    if (step == 19 && iter % 10 == 0) {
+                    if (overloadfinder) { // если мы на последнем шаге
+                        if (lastStep == 22) { // в системе х64
+                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) < tmp ) {
+                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10));
+                                overloaded = true;
+                                break;
+                            }
+                            if ((tmp + iter * (degree / 10) + saturation * (degree / 10)) < tmp ) {
+                                tmp = (tmp + iter * ( degree / 10) + saturation * (degree / 10));
+                                overloaded = true;
+                                break;
+                            }
+                        } else if (lastStep == 12) { //если система х32
+                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
+                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10)) - 4294967295;
+                                overloaded = true;
+                                break;
+                            }
+                            if ((tmp + iter * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
+                                tmp = (tmp + iter * (degree / 10) + saturation * (degree / 10)) - 4294967295;
+                                overloaded = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (step == lastStep - 1 && iter % 10 == 0) {
                         saturation = 1; break;
                     }
                     tmp += iter % 10 * (degree / 10) + saturation * (degree / 10);
-                    saturation = 1;
+                    if (step != lastStep - 1) saturation = 1;
                 } else {
-                    tmp += iter * (degree / 10) + saturation * (degree / 10);
+                    if (overloadfinder) { // если мы на последнем шаге
+                        if (lastStep == 22) { // в системе х64
+                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) < tmp ) {
+                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10)) - 1;
+                                overloaded = true;
+                                break;
+                            }
+                            if ((tmp + iter * (degree / 10) + saturation * (degree / 10)) < tmp ) {
+                                tmp = (tmp + iter * ( degree / 10) + saturation * (degree / 10)) - 1;
+                                overloaded = true;
+                                break;
+                            }
+                        } else if (lastStep == 12) { //если система х32
+                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
+                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10)) - 4294967295 - 1;
+                                overloaded = true;
+                                break;
+                            }
+                            if ((tmp + iter * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
+                                tmp = (tmp + iter * (degree / 10) + saturation * (degree / 10)) - 4294967295 - 1;
+                                overloaded = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (iter == 0 && saturation == 0 && step == lastStep - 1) break;
+                    if (step != lastStep - 2) {
+                        tmp += iter * (degree / 10) + saturation * (degree / 10);
+                    } else {
+                        tmp += iter * degree;
+                        saturation = 0;
+                        break;
+                    }
                     saturation = 0;
                 }
                 step++;
+            }
+            if (overloaded) {
+                this->arr[i] = tmp;
+                if (arr.size() > i + 1) {
+                    this->arr[i + 1] += 1;
+                } else {
+                    arr.push_back(1);
+                }
+            }
+
+            if (saturation) {
+                if (arr.size() > i + 1) {
+                    this->arr[i + 1] += 1;
+                    saturation = 0;
+                } else {
+                    arr.push_back(1);
+                }
             }
             this->arr[i] = tmp;
         }
@@ -248,7 +456,6 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
         }
     }
 
-
     if (this->isNegative() && other.isPositive()) {
             int step = 1;
             ulonglong tmp = 0;
@@ -302,7 +509,6 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                 isNegativeAnswer = false;
             }
         }
-
 
     if (this->arr.size() == 1 && this->arr[0] == 0) isNegativeAnswer = false;
 
@@ -364,7 +570,6 @@ bool bigNumber::operator>(const bigNumber &other)
     }
 }
 
-
 quint bigNumber::getSize() const
 {
     return arr.size();
@@ -407,6 +612,7 @@ std::ostream& operator<< (std::ostream &OU, const bigNumber & number){
 
 bool operator==(const bigNumber &left, const bigNumber &right)
 {
+    //decimal ==
     if (left.Negative != right.Negative) return false;
     if (left.arr.size() != right.arr.size()) return false;
 
@@ -417,6 +623,18 @@ bool operator==(const bigNumber &left, const bigNumber &right)
     }
 
     return true;
+
+    //binary test
+//    if (left.Negative != right.Negative) return false;
+//    if (left.arr.size() != right.arr.size()) return false;
+//    QString leftStr = "";
+//    QString rightStr = "";
+//    for (int i = left.arrStrBinary.size() - 1; i >= 0; --i) {
+//        if (left.arr[i] != right.arr[i]) {
+//            return false;
+//        }
+//    }
+//    return true;
 }
 
 bool operator&=(const bigNumber &left, const bigNumber &right)

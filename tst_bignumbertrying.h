@@ -17,6 +17,8 @@ private slots:
 
     //POSITIVE:
     void positiveSameNumbers();
+    void ulongPlusOne();
+    void positiveSameNumbersBig();
     void positiveDifferentNumbers();
     void positiveDifferentNumbersSwitched();
 

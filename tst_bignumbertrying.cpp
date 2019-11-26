@@ -16,6 +16,26 @@ void bigNumberTrying::positiveSameNumbers()
     QCOMPARE(test.getSumm(A, B), result);
 }
 
+void bigNumberTrying::ulongPlusOne()
+{
+    bigNumber A = bigNumber("4294967295");
+    bigNumber B = bigNumber("1");
+    bigNumber result = bigNumber("4294967296");
+    biSumms test = biSumms();
+
+    QCOMPARE(test.getSumm(A, B), result);
+}
+
+void bigNumberTrying::positiveSameNumbersBig()
+{
+    bigNumber A = bigNumber("111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+    bigNumber B = bigNumber("111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+    bigNumber result = bigNumber("222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222");
+    biSumms test = biSumms();
+
+    QCOMPARE(test.getSumm(A, B), result);
+}
+
 void bigNumberTrying::positiveDifferentNumbers()
 {
     bigNumber A = bigNumber("111121111");
