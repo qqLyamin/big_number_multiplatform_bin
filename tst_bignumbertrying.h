@@ -15,46 +15,50 @@ public:
 
 private slots:
 
-    //POSITIVE:
-    void positiveSameNumbers();
-    void ulongPlusOne();
-    void positiveSameNumbersBig();
-    void positiveDifferentNumbers();
-    void positiveDifferentNumbersSwitched();
+    //targeting:
+    void max64();
+    void max32();
 
-    //POSITIVE + NEGATIVE:
-    void positiveNegative();
-    void negativePositive();
+//    //POSITIVE:
+//    void positiveSameNumbers();
+//    void ulongPlusOne();
+//    void positiveSameNumbersBig();
+//    void positiveDifferentNumbers();
+//    void positiveDifferentNumbersSwitched();
 
-    void positiveNegativeSwitched();
-    void negativePositiveSwitched();
+//    //POSITIVE + NEGATIVE:
+//    void positiveNegative();
+//    void negativePositive();
 
-    void positiveNegativeSame();
-    void negativePositiveSame();
+//    void positiveNegativeSwitched();
+//    void negativePositiveSwitched();
 
-    //TWO NEGATIVE:
-    void negativeNegative();
-    void negativeNegativeSwitched();
-    void negativeSameNumbersBig();
-    void negativeDifferentNumbersBig();
-    void negativeNegativeSame();
+//    void positiveNegativeSame();
+//    void negativePositiveSame();
 
-    //TRASH WITH NORMAL:
-    void trashPlusNormal();
-    void normalPlusTrash();
-    void trashPlusTrash();
+//    //TWO NEGATIVE:
+//    void negativeNegative();
+//    void negativeNegativeSwitched();
+//    void negativeSameNumbersBig();
+//    void negativeDifferentNumbersBig();
+//    void negativeNegativeSame();
 
-    //ZEROS WITH OK:
-    void zeroPlusOk();
-    void okPlusZero();
-    void zeroPlusZero();
+//    //TRASH WITH NORMAL:
+//    void trashPlusNormal();
+//    void normalPlusTrash();
+//    void trashPlusTrash();
 
-    //EXTREMAL SITUATIONS:
-    void ninesPlusOne();
-    void ninesPlusOneSwitched();
-    void millionPlusOneNegative();
-    void millionPlusOneNegativeSwitched();
-    void millionNegativePlusOnePositive();
+//    //ZEROS WITH OK:
+//    void zeroPlusOk();
+//    void okPlusZero();
+//    void zeroPlusZero();
+
+//    //EXTREMAL SITUATIONS:
+//    void ninesPlusOne();
+//    void ninesPlusOneSwitched();
+//    void millionPlusOneNegative();
+//    void millionPlusOneNegativeSwitched();
+//    void millionNegativePlusOnePositive();
 
 //DESIGN TIME CASES:
 //    void caseNines();

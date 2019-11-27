@@ -83,40 +83,111 @@ bigNumber::bigNumber(const QString & income)
 
     QString tmp = "";
     bool overloaded = false;
+    bool broken = false;
     if (isValid) {
         int i = 0;
-        while (incomeCopy.length() > 1 || (incomeCopy[0] != 1 || incomeCopy[0] != 0)) {
-            if (i == SIZE_OF_POINTER * 8) {
+        while (incomeCopy.length() > 1 ||
+               (incomeCopy[0] != 1 ||
+                incomeCopy[0] != 0))
+        {
+            if (i == 63) {
+                int x = 2;
+            }
+            if (i == SIZE_OF_POINTER * 8 - 1) {
                 if (!tmp.contains('0')) {
-                    overloaded = true;
-                    arrStrBinary.push_back("");
-                    arr.push_back(0);
+                    if (i == 31 && !tmp.contains('0')) {
+                        overloaded = true;
+                        arrStrBinary.push_back(tmp);
+                        tmp = "";
+                        arr.push_back(4294967295);
+                        i = 0;
+                    } else if (i == 63 && !tmp.contains('0')) {
+                        overloaded = true;
+                        arrStrBinary.push_back(tmp);
+                        tmp = "";
+                        arr.push_back(18446744073709551615);
+                        i = 0;
+                    }
                     i = 0;
                     continue;
                 }
                 invert_string(tmp);
                 arrStrBinary.push_back(tmp);
                 ulonglong temp = fromBinToDecimal(tmp);
+                if (SIZE_OF_POINTER == 8) {
+                    if (overloaded && (temp < 18446744073709551615)) {
+                        temp += 1;
+                        overloaded = false;
+                    } else if (overloaded) {
+                        overloaded = true;
+                        arrStrBinary.push_back("");
+                        arr.push_back(0);
+                        i = 0;
+                        continue;
+                    }
+                } else {
+                    if (overloaded && (temp < 4294967295)) {
+                        temp += 1;
+                        overloaded = false;
+                    } else if (overloaded) {
+                        overloaded = true;
+                        arrStrBinary.push_back("");
+                        arr.push_back(0);
+                        i = 0;
+                        continue;
+                        //2049638230412172288
+                       //16397105843297378304
+                    }
+                }
                 arr.push_back(temp);
-                i = 0;
                 tmp = "";
+                i = 0;
+                overloaded = true;
+                continue;
             }
-            if (even(incomeCopy) && !overloaded) {
+            if (incomeCopy == "") break;
+            if (even(incomeCopy)) {
+                if (overloaded && i == 0) {
+                    tmp += "1";
+                    incomeCopy[incomeCopy.length() - 1] = static_cast<char>(((incomeCopy[incomeCopy.length() - 1].digitValue() - 1) + 48));
+                    incomeCopy = divide(incomeCopy);
+                    overloaded = false;
+                    continue;
+                }
                 tmp += "0";
                 incomeCopy = divide(incomeCopy);
             } else {
-                if (overloaded) overloaded = false;
                 tmp += "1";
                 incomeCopy[incomeCopy.length() - 1] = static_cast<char>(((incomeCopy[incomeCopy.length() - 1].digitValue() - 1) + 48));
                 incomeCopy = divide(incomeCopy);
             }
-            if (incomeCopy.length() == 1 && incomeCopy[0] == 48) break;
+            if (incomeCopy.length() == 1 && incomeCopy[0] == 48) {
+                broken = true;
+                break;
+            }
             i++;
         }
-        invert_string(tmp);
-        arrStrBinary.push_back(tmp);
-        ulonglong temp = fromBinToDecimal(tmp);
-        arr.push_back(temp);
+        if (broken && (i == 63 || i == 31)) {
+            if (i == 31 && !tmp.contains('0')) {
+                overloaded = true;
+                arrStrBinary.push_back(tmp);
+                tmp = "";
+                arr.push_back(4294967295);
+                i = 0;
+            } else if (i == 63 && !tmp.contains('0')) {
+                overloaded = true;
+                arrStrBinary.push_back(tmp);
+                tmp = "";
+                arr.push_back(18446744073709551615);
+                i = 0;
+            }
+        }
+        if (!overloaded) {
+            invert_string(tmp);
+            arrStrBinary.push_back(tmp);
+            ulonglong temp = fromBinToDecimal(tmp);
+            arr.push_back(temp);
+        }
     } else {
         Trash = true;
         arr.push_back(0);
@@ -124,7 +195,6 @@ bigNumber::bigNumber(const QString & income)
         Negative = false;
     }
 }
-
 
 bigNumber & bigNumber::operator+(const bigNumber & other)
 {
@@ -158,12 +228,18 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
         for ( quint i = 0 ; i < maxSize; ++i ) {
             int step = 1;
             ulonglong tmp = 0;
-            bool overloadfinder = false;
-            bool overloaded = false;
+            bool overloadfinder;
+            bool overloaded;
+            if (i != 1) {
+                overloadfinder = false;
+                overloaded = false;
+            }
             ulonglong degree = static_cast<ulonglong>(pow(10, 0));
             while (step < lastStep) {
-                if (step == lastStep - 1 && saturation == 1) break;
-
+                if (step == lastStep - 1 && (saturation == 1 ||  overloaded)) {
+                    int x = 1;
+                    break;
+                }
                 if (step != lastStep - 2) {
                     degree = static_cast<ulonglong>(pow(10, step));
                 }
@@ -171,7 +247,19 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                 ulonglong otherPart = 0;
                 ulonglong iter = 0;
                 if (step < lastStep - 2) {
-                    iter = (arr[i] % degree - arr[i] % (degree / 10))/ (degree / 10) + (other.arr[i] % degree - other.arr[i] % (degree / 10))/ (degree / 10);
+                    part = arr[i];
+                    otherPart = other.arr[i];
+                    for (int i = 0; i < step - 2; i++) {
+                        part = part / 10;
+                        otherPart = otherPart / 10;
+                    }
+
+                    if (lastStep == 22) {
+                        iter = part  + otherPart;
+                        iter = iter / 10;
+                    } else {
+                        iter = part / 10 + otherPart / 10;
+                    }
                 } else {
                     overloadfinder = true;
                     part = arr[i];
@@ -183,7 +271,6 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
 
                     if (lastStep == 22) {
                         iter = part  + otherPart;
-                        //if (iter > 9) saturation = 1; // HERE CAN BE THE PROBLEM!!!!!!!!
                         iter = iter / 10;
                     } else {
                         iter = part / 10 + otherPart / 10;
@@ -242,8 +329,8 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                                 overloaded = true;
                                 break;
                             }
-                            if ((tmp + iter * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
-                                tmp = (tmp + iter * (degree / 10) + saturation * (degree / 10)) - 4294967295 - 1;
+                            if ((tmp + iter * degree ) + saturation * (degree / 10) > 4294967295 ) {
+                                tmp = tmp - (4294967295 - iter * degree) - 1;
                                 overloaded = true;
                                 break;
                             }
@@ -270,9 +357,14 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                                 saturation = 0;
                             }
                         } else {
-                            tmp += iter * degree;
-                            saturation = 0;
-                            break;
+                            if (18446744073709551615 - degree >= tmp) {
+                                tmp += iter * degree;
+                                saturation = 0;
+                                break;
+                            } else {
+                                tmp = tmp - (18446744073709551615 - degree) - 1;
+                                overloaded = true;
+                            }
                         }
                     }
                     if (lastStep == 12 && overloadfinder && step == 10 && saturation == 1) {
@@ -282,14 +374,15 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                     }
                 }
                 step++;
-            }
+            }/*
             if (overloaded) {
                 if (arr.size() > i + 1) {
+                    //this->arr[i] = tmp;
                     this->arr[i + 1] += 1;
                 } else {
                     arr.push_back(1);
                 }
-            }
+            }*/
 
             if (saturation) {
                 if (arr.size() > i + 1) {
@@ -297,9 +390,15 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                     saturation = 0;
                 } else {
                     arr.push_back(1);
+                    saturation = 0;
                 }
             }
-            this->arr[i] = tmp;
+            if (overloaded && tmp == 0 && i != 0) {
+                this->arr[i] = tmp + 1;
+                overloaded = false;
+            } else {
+                this->arr[i] = tmp;
+            }
         }
         isNegativeAnswer = false;
     }
