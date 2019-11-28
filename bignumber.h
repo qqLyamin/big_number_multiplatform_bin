@@ -8,6 +8,8 @@ typedef unsigned int quint;
 typedef unsigned long long ulonglong;
 
 #define SIZE_OF_POINTER sizeof(void*)
+#define MAX_INT 4294967295
+#define MAX_ULONGLONG 18446744073709551615
 
 template <typename T>
 void invert_string( T & tmp ) {

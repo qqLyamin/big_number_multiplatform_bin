@@ -19,15 +19,14 @@ bool even( const QString & incomeNumber ) {
     }
 }
 
-QString divide( const QString & incomeNumber ) {
+void divide( QString & incomeNumber ) {
     int last = incomeNumber.length();
-    QString incomeCopy = incomeNumber;
     QString devide = "";
     QString answer = "";
     bool isOverloaded = false;
 
     for (int i = 0; i < last; ++i) {
-        int a = incomeCopy[i].digitValue();
+        int a = incomeNumber[i].digitValue();
         if (devide.length() < 2) {
             devide += (char)(a + 48);
         }
@@ -50,7 +49,7 @@ QString divide( const QString & incomeNumber ) {
         }
     }
 
-    return answer;
+    incomeNumber = answer;
 }
 
 ulonglong fromBinToDecimal( const QString & incomeNumber ) {
@@ -81,118 +80,25 @@ bigNumber::bigNumber(const QString & income)
     QString incomeCopy = income;
     if (isValid && this->isNegative()) incomeCopy.remove(0, 1);
 
-    QString tmp = "";
-    bool overloaded = false;
-    bool broken = false;
-    if (isValid) {
+    QString binaryRow = "";
+    while (incomeCopy != '0') {
         int i = 0;
-        while (incomeCopy.length() > 1 ||
-               (incomeCopy[0] != 1 ||
-                incomeCopy[0] != 0))
-        {
-            if (i == 63) {
-                int x = 2;
-            }
-            if (i == SIZE_OF_POINTER * 8 - 1) {
-                if (!tmp.contains('0')) {
-                    if (i == 31 && !tmp.contains('0')) {
-                        overloaded = true;
-                        arrStrBinary.push_back(tmp);
-                        tmp = "";
-                        arr.push_back(4294967295);
-                        i = 0;
-                    } else if (i == 63 && !tmp.contains('0')) {
-                        overloaded = true;
-                        arrStrBinary.push_back(tmp);
-                        tmp = "";
-                        arr.push_back(18446744073709551615);
-                        i = 0;
-                    }
-                    i = 0;
-                    continue;
-                }
-                invert_string(tmp);
-                arrStrBinary.push_back(tmp);
-                ulonglong temp = fromBinToDecimal(tmp);
-                if (SIZE_OF_POINTER == 8) {
-                    if (overloaded && (temp < 18446744073709551615)) {
-                        temp += 1;
-                        overloaded = false;
-                    } else if (overloaded) {
-                        overloaded = true;
-                        arrStrBinary.push_back("");
-                        arr.push_back(0);
-                        i = 0;
-                        continue;
-                    }
-                } else {
-                    if (overloaded && (temp < 4294967295)) {
-                        temp += 1;
-                        overloaded = false;
-                    } else if (overloaded) {
-                        overloaded = true;
-                        arrStrBinary.push_back("");
-                        arr.push_back(0);
-                        i = 0;
-                        continue;
-                        //2049638230412172288
-                       //16397105843297378304
-                    }
-                }
-                arr.push_back(temp);
-                tmp = "";
-                i = 0;
-                overloaded = true;
-                continue;
-            }
-            if (incomeCopy == "") break;
+        while (i < SIZE_OF_POINTER * 8) {
+
             if (even(incomeCopy)) {
-                if (overloaded && i == 0) {
-                    tmp += "1";
-                    incomeCopy[incomeCopy.length() - 1] = static_cast<char>(((incomeCopy[incomeCopy.length() - 1].digitValue() - 1) + 48));
-                    incomeCopy = divide(incomeCopy);
-                    overloaded = false;
-                    continue;
-                }
-                tmp += "0";
-                incomeCopy = divide(incomeCopy);
+                binaryRow += "0";
+                divide(incomeCopy);
             } else {
-                tmp += "1";
+                binaryRow += "1";
                 incomeCopy[incomeCopy.length() - 1] = static_cast<char>(((incomeCopy[incomeCopy.length() - 1].digitValue() - 1) + 48));
-                incomeCopy = divide(incomeCopy);
+                divide(incomeCopy);
             }
-            if (incomeCopy.length() == 1 && incomeCopy[0] == 48) {
-                broken = true;
-                break;
-            }
+            if (incomeCopy == '0') break;
             i++;
         }
-        if (broken && (i == 63 || i == 31)) {
-            if (i == 31 && !tmp.contains('0')) {
-                overloaded = true;
-                arrStrBinary.push_back(tmp);
-                tmp = "";
-                arr.push_back(4294967295);
-                i = 0;
-            } else if (i == 63 && !tmp.contains('0')) {
-                overloaded = true;
-                arrStrBinary.push_back(tmp);
-                tmp = "";
-                arr.push_back(18446744073709551615);
-                i = 0;
-            }
-        }
-        if (!overloaded) {
-            invert_string(tmp);
-            arrStrBinary.push_back(tmp);
-            ulonglong temp = fromBinToDecimal(tmp);
-            arr.push_back(temp);
-        }
-    } else {
-        Trash = true;
-        arr.push_back(0);
-        arrStrBinary.push_back("0");
-        Negative = false;
+
+        arr.push_back(fromBinToDecimal(binaryRow));
+        binaryRow = "";
     }
 }
 
@@ -215,460 +121,150 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
             this->arrStrBinary.push_back("0");
         }
     }
-    int lastStep = SIZE_OF_POINTER == 4 ? 12 : 22;
 
-    ulonglong saturation = 0;
-    quint maxSize;
-    bigNumber otherCopy = other;
-
-    bool isNegativeAnswer = false;
-    maxSize = arr.size() > other.arr.size() ? arr.size() : other.arr.size();
-
-    if (this->isPositive() && other.isPositive()) {
-        for ( quint i = 0 ; i < maxSize; ++i ) {
-            int step = 1;
-            ulonglong tmp = 0;
-            bool overloadfinder;
-            bool overloaded;
-            if (i != 1) {
-                overloadfinder = false;
-                overloaded = false;
-            }
-            ulonglong degree = static_cast<ulonglong>(pow(10, 0));
-            while (step < lastStep) {
-                if (step == lastStep - 1 && (saturation == 1 ||  overloaded)) {
-                    int x = 1;
-                    break;
-                }
-                if (step != lastStep - 2) {
-                    degree = static_cast<ulonglong>(pow(10, step));
-                }
-                ulonglong part = 0;
-                ulonglong otherPart = 0;
-                ulonglong iter = 0;
-                if (step < lastStep - 2) {
-                    part = arr[i];
-                    otherPart = other.arr[i];
-                    for (int i = 0; i < step - 2; i++) {
-                        part = part / 10;
-                        otherPart = otherPart / 10;
-                    }
-
-                    if (lastStep == 22) {
-                        iter = part  + otherPart;
-                        iter = iter / 10;
-                    } else {
-                        iter = part / 10 + otherPart / 10;
-                    }
-                } else {
-                    overloadfinder = true;
-                    part = arr[i];
-                    otherPart = other.arr[i];
-                    for (int i = 0; i < step - 2; i++) {
-                        part = part / 10;
-                        otherPart = otherPart / 10;
-                    }
-
-                    if (lastStep == 22) {
-                        iter = part  + otherPart;
-                        iter = iter / 10;
-                    } else {
-                        iter = part / 10 + otherPart / 10;
-                    }
-                }
-                if (step == lastStep - 1) {
-                    overloadfinder = true;
-                }
-                if (iter > 9) {
-                    if (overloadfinder) { // если мы на последнем шаге
-                        if (lastStep == 22) { // в системе х64
-                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) < tmp ) {
-                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10));
-                                overloaded = true;
-                                break;
-                            }
-                            if ((tmp + iter * (degree / 10) + saturation * (degree / 10)) < tmp ) {
-                                tmp = (tmp + iter * ( degree / 10) + saturation * (degree / 10));
-                                overloaded = true;
-                                break;
-                            }
-                        } else if (lastStep == 12) { //если система х32
-                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
-                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10)) - 4294967295;
-                                overloaded = true;
-                                break;
-                            }
-                            if ((tmp + iter * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
-                                tmp = (tmp + iter * (degree / 10) + saturation * (degree / 10)) - 4294967295;
-                                overloaded = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (step == lastStep - 1 && iter % 10 == 0) {
-                        saturation = 1; break;
-                    }
-                    tmp += iter % 10 * (degree / 10) + saturation * (degree / 10);
-                    if (step != lastStep - 1) saturation = 1;
-                } else {
-                    if (overloadfinder) { // если мы на последнем шаге
-                        if (lastStep == 22) { // в системе х64
-                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) < tmp ) {
-                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10)) - 1;
-                                overloaded = true;
-                                break;
-                            }
-                            if ((tmp + iter * (degree / 10) + saturation * (degree / 10)) < tmp ) {
-                                tmp = (tmp + iter * ( degree / 10) + saturation * (degree / 10)) - 1;
-                                overloaded = true;
-                                break;
-                            }
-                        } else if (lastStep == 12) { //если система х32
-                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
-                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10)) - 4294967295 - 1;
-                                overloaded = true;
-                                break;
-                            }
-                            if ((tmp + iter * degree ) + saturation * (degree / 10) > 4294967295 ) {
-                                tmp = tmp - (4294967295 - iter * degree) - 1;
-                                overloaded = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (iter == 0 && saturation == 0 && step == lastStep - 1) break;
-                    if (step != lastStep - 2) {
-                        tmp += iter * (degree / 10) + saturation * (degree / 10);
-                    } else {
-                        if (lastStep == 12 && overloadfinder && step == 10 && saturation == 0) {
-                            if (tmp + iter * degree > 4294967295) {
-                                tmp = tmp + iter * degree - 4294967295 - 1;
-                                saturation = 1;
-                            } else {
-                                tmp = tmp + (iter + saturation) * degree;
-                                saturation = 0;
-                            }
-                        } else if (lastStep == 12 && overloadfinder && step == 10 && saturation == 1) {
-                            if (tmp + (iter + saturation) * degree > 4294967295) {
-                                tmp = tmp + (iter + saturation) * degree - 4294967295 - 1;
-                                saturation = 1;
-                            } else {
-                                tmp = tmp + (iter + saturation) * degree;
-                                saturation = 0;
-                            }
-                        } else {
-                            if (18446744073709551615 - degree >= tmp) {
-                                tmp += iter * degree;
-                                saturation = 0;
-                                break;
-                            } else {
-                                tmp = tmp - (18446744073709551615 - degree) - 1;
-                                overloaded = true;
-                            }
-                        }
-                    }
-                    if (lastStep == 12 && overloadfinder && step == 10 && saturation == 1) {
-                        saturation = 1;
-                    } else {
-                        saturation = 0;
-                    }
-                }
-                step++;
-            }/*
-            if (overloaded) {
-                if (arr.size() > i + 1) {
-                    //this->arr[i] = tmp;
-                    this->arr[i + 1] += 1;
-                } else {
-                    arr.push_back(1);
-                }
-            }*/
-
-            if (saturation) {
-                if (arr.size() > i + 1) {
-                    this->arr[i + 1] += 1;
-                    saturation = 0;
-                } else {
-                    arr.push_back(1);
-                    saturation = 0;
-                }
-            }
-            if (overloaded && tmp == 0 && i != 0) {
-                this->arr[i] = tmp + 1;
-                overloaded = false;
-            } else {
-                this->arr[i] = tmp;
-            }
-        }
-        isNegativeAnswer = false;
-    }
-
-    if (this->isNegative() && other.isNegative()) {
-        for ( quint i = 0 ; i < maxSize; ++i ) {
-            int step = 1;
-            ulonglong tmp = 0;
-            bool overloadfinder = false;
-            bool overloaded = false;
-            ulonglong degree = static_cast<ulonglong>(pow(10, 0));
-            while (step < lastStep) {
-                if (step == lastStep - 1 && saturation == 1) break;
-
-                if (step != lastStep - 2) {
-                    degree = static_cast<ulonglong>(pow(10, step));
-                }
-                ulonglong part = 0;
-                ulonglong otherPart = 0;
-                ulonglong iter = 0;
-                if (step < lastStep - 2) {
-                    iter = (arr[i] % degree - arr[i] % (degree / 10))/ (degree / 10) + (other.arr[i] % degree - other.arr[i] % (degree / 10))/ (degree / 10);
-                } else {
-                    overloadfinder = true;
-                    part = arr[i];
-                    otherPart = other.arr[i];
-                    for (int i = 0; i < step - 2; i++) {
-                        part = part / 10;
-                        otherPart = otherPart / 10;
-                    }
-
-                    if (lastStep == 22) {
-                        iter = part  + otherPart;
-                        //if (iter > 9) saturation = 1; // HERE CAN BE THE PROBLEM!!!!!!!!
-                        iter = iter / 10;
-                    } else {
-                        iter = part / 10 + otherPart / 10;
-                    }
-                }
-                if (step == lastStep - 1) {
-                    overloadfinder = true;
-                }
-                if (iter > 9) {
-                    if (overloadfinder) { // если мы на последнем шаге
-                        if (lastStep == 22) { // в системе х64
-                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) < tmp ) {
-                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10));
-                                overloaded = true;
-                                break;
-                            }
-                            if ((tmp + iter * (degree / 10) + saturation * (degree / 10)) < tmp ) {
-                                tmp = (tmp + iter * ( degree / 10) + saturation * (degree / 10));
-                                overloaded = true;
-                                break;
-                            }
-                        } else if (lastStep == 12) { //если система х32
-                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
-                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10)) - 4294967295;
-                                overloaded = true;
-                                break;
-                            }
-                            if ((tmp + iter * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
-                                tmp = (tmp + iter * (degree / 10) + saturation * (degree / 10)) - 4294967295;
-                                overloaded = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (step == lastStep - 1 && iter % 10 == 0) {
-                        saturation = 1; break;
-                    }
-                    tmp += iter % 10 * (degree / 10) + saturation * (degree / 10);
-                    if (step != lastStep - 1) saturation = 1;
-                } else {
-                    if (overloadfinder) { // если мы на последнем шаге
-                        if (lastStep == 22) { // в системе х64
-                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) < tmp ) {
-                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10)) - 1;
-                                overloaded = true;
-                                break;
-                            }
-                            if ((tmp + iter * (degree / 10) + saturation * (degree / 10)) < tmp ) {
-                                tmp = (tmp + iter * ( degree / 10) + saturation * (degree / 10)) - 1;
-                                overloaded = true;
-                                break;
-                            }
-                        } else if (lastStep == 12) { //если система х32
-                            if ((tmp + iter % 10 * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
-                                tmp = (tmp + iter % 10 * (degree / 10) + saturation * (degree / 10)) - 4294967295 - 1;
-                                overloaded = true;
-                                break;
-                            }
-                            if ((tmp + iter * ( degree / 10) + saturation * (degree / 10)) > 4294967295 ) {
-                                tmp = (tmp + iter * (degree / 10) + saturation * (degree / 10)) - 4294967295 - 1;
-                                overloaded = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (iter == 0 && saturation == 0 && step == lastStep - 1) break;
-                    if (step != lastStep - 2) {
-                        tmp += iter * (degree / 10) + saturation * (degree / 10);
-                    } else {
-                        if (lastStep == 12 && overloadfinder && step == 10 && saturation == 0) {
-                            if (tmp + iter * degree > 4294967295) {
-                                tmp = tmp + iter * degree - 4294967295 - 1;
-                                saturation = 1;
-                            } else {
-                                tmp = tmp + (iter + saturation) * degree;
-                                saturation = 0;
-                            }
-                        } else if (lastStep == 12 && overloadfinder && step == 10 && saturation == 1) {
-                            if (tmp + (iter + saturation) * degree > 4294967295) {
-                                tmp = tmp + (iter + saturation) * degree - 4294967295 - 1;
-                                saturation = 1;
-                            } else {
-                                tmp = tmp + (iter + saturation) * degree;
-                                saturation = 0;
-                            }
-                        } else {
-                            tmp += iter * degree;
-                            saturation = 0;
-                            break;
-                        }
-                    }
-                    if (lastStep == 12 && overloadfinder && step == 10 && saturation == 1) {
-                        saturation = 1;
-                    } else {
-                        saturation = 0;
-                    }
-                }
-                step++;
-            }
-            if (overloaded) {
-                if (arr.size() > i + 1) {
-                    this->arr[i + 1] += 1;
-                } else {
-                    arr.push_back(1);
-                }
-            }
-
-            if (saturation) {
-                if (arr.size() > i + 1) {
-                    this->arr[i + 1] += 1;
-                    saturation = 0;
-                } else {
-                    arr.push_back(1);
-                }
-            }
-            this->arr[i] = tmp;
-        }
-        isNegativeAnswer = true;
-    }
-
+    //negative or positive answer
     if (this->isPositive() && other.isNegative()) {
-        int step = 1;
-        ulonglong tmp = 0;
-        if (*this ->* otherCopy) {
-            for ( quint i = 0 ; i < maxSize; ++i ) {
-                if (arr[i] < otherCopy.arr[i]) {
-                    if (SIZE_OF_POINTER == 4) {
-                        tmp = 4294967294 - otherCopy.arr[i] + arr[i] + 1;
-                    }
-                    if (SIZE_OF_POINTER == 8) {
-                        tmp = 18446744073709551614 - otherCopy.arr[i] + arr[i] + 1;
-                    }
-                    arr[i + 1] -= 1;
+        if (*this > other || (*this &= other)) {
+            // do nothing
+        } else {
+            this->setNegative();
+        }
+    }
+    if (this->isNegative() && other.isPositive()) {
+        if (*this > other || (*this &= other)) {
+            // do nothing
+        } else {
+            this->setPositive();
+        }
+    }
+
+    int overloaded = 0;
+    int i = 0;
+
+    while (arr[i] != 0 && other.arr[i] != 0) {
+        if (this->isPositive() == other.isPositive()) { //если номера одного знака, то нам плевать какой больше
+
+            if (SIZE_OF_POINTER == 4) {
+
+                unsigned long THIS;
+                if (i < arr.size()) {
+                    THIS = arr[i];
+                } else {
+                    THIS = 0;
                 }
 
-                if (arr[i] > otherCopy.arr[i]) {
-                    tmp = arr[i] - otherCopy.arr[i];
+                unsigned long OTHER;
+                if (i < other.arr.size()) {
+                    OTHER = other.arr[i];
+                } else {
+                    OTHER = 0;
                 }
 
-                if (arr[i] == otherCopy.arr[i]) {
-                    tmp = 0;
+                if (MAX_INT - THIS > OTHER) {
+
+                    if (i <= arr.size()) {
+                        if (overloaded) {
+                            arr[i] = THIS + OTHER + 1;
+                            overloaded = 0;
+                        } else {
+                            arr[i] = THIS + OTHER;
+                        }
+                    } else {
+                        if (overloaded) {
+                            arr.push_back(THIS + OTHER + 1);
+                            overloaded = 0;
+                        } else {
+                            arr.push_back(THIS + OTHER);
+                        }
+                    }
+                } else if (MAX_INT - THIS == OTHER && !overloaded) {
+                    if (i <= arr.size()) {
+                        arr[i] = MAX_INT;
+                    } else {
+                        arr.push_back(MAX_INT);
+                    }
+                } else {
+                    if (i <= arr.size()) {
+                        if (other.arr.size() > i) {
+                            arr[i] = OTHER - (MAX_INT - THIS) - 1;
+                            overloaded = 1;
+                        } else {
+                            arr[i] = OTHER - (MAX_INT - THIS);
+                            overloaded = 1;
+                        }
+                    } else {
+                        arr.push_back(OTHER - (MAX_INT - THIS) - 1);
+                        overloaded = 1;
+                    }
                 }
-                this->arr[i] = tmp;
+
+            } else if (SIZE_OF_POINTER == 8) {
+
+                if (MAX_ULONGLONG - arr[i] > other.arr[i]) {
+                    if (overloaded) {
+                        arr[i] = arr[i] + other.arr[i] + 1;
+                        overloaded = 0;
+                    } else {
+                        arr[i] = arr[i] + other.arr[i];
+                    }
+                } else if (MAX_ULONGLONG - arr[i] == other.arr[i]) {
+                    arr[i] = MAX_ULONGLONG;
+                } else {
+                    arr[i] = other.arr[i] - (MAX_ULONGLONG - arr[i]) - 1;
+                    overloaded = 1;
+                }
+
             }
-            isNegativeAnswer = false;
-        } else if (otherCopy &= *this) {
-            isNegativeAnswer = false;
+
+            i++;
+            continue;
+
+        }
+
+        if (*this ->* other) { //выясняем какой больше по модулю
+
+            if (arr[i] > other.arr[i]) {
+                arr[i] = arr[i] - other.arr[i];
+            } else if (arr[i] == other.arr[i]) {
+                arr[i] = 0;
+            } else {
+                arr[i + 1] -= 1;
+                if (SIZE_OF_POINTER == 4) {
+                    arr[i] = MAX_INT - other.arr[i] + arr[i];
+                } else if (SIZE_OF_POINTER == 8) {
+                    arr[i] = MAX_ULONGLONG - other.arr[i] + arr[i];
+                }
+            }
+
+        } else if (*this == other) {
+
             this->arr.clear();
             this->arr.push_back(0);
-        } else {
-            for ( quint i = 0 ; i < maxSize; ++i ) {
-                if (arr[i] > otherCopy.arr[i]) {
-                    if (SIZE_OF_POINTER == 4) {
-                        tmp = 4294967294 - arr[i] + otherCopy.arr[i] + 1;
-                    }
-                    if (SIZE_OF_POINTER == 8) {
-                        tmp = 18446744073709551614 - arr[i] + otherCopy.arr[i] + 1;
-                    }
-                    otherCopy.arr[i + 1] -= 1;
-                }
+            this->setPositive();
+            this->arrStrBinary.clear();
+            this->arrStrBinary.push_back("0");
 
-                if (arr[i] < otherCopy.arr[i]) {
-                    tmp = otherCopy.arr[i] - arr[i];
-                }
+        } else { // если other больше по модулю
 
-                if (arr[i] == otherCopy.arr[i]) {
-                    tmp = 0;
-                }
-                this->arr[i] = tmp;
-            }
-            isNegativeAnswer = true;
-        }
-    }
-
-    if (this->isNegative() && other.isPositive()) {
-            int step = 1;
-            ulonglong tmp = 0;
-            if (*this ->* otherCopy) {
-                for ( quint i = 0 ; i < maxSize; ++i ) {
-                    if (arr[i] < otherCopy.arr[i]) {
-                        if (SIZE_OF_POINTER == 4) {
-                            tmp = 4294967294 - otherCopy.arr[i] + arr[i] + 1;
-                        }
-                        if (SIZE_OF_POINTER == 8) {
-                            tmp = 18446744073709551614 - otherCopy.arr[i] + arr[i] + 1;
-                        }
-                        arr[i + 1] -= 1;
-                    }
-
-                    if (arr[i] > otherCopy.arr[i]) {
-                        tmp = arr[i] - otherCopy.arr[i];
-                    }
-
-                    if (arr[i] == otherCopy.arr[i]) {
-                        tmp = 0;
-                    }
-                    this->arr[i] = tmp;
-                }
-                isNegativeAnswer = true;
-            } else if (otherCopy &= *this) {
-                isNegativeAnswer = false;
-                this->arr.clear();
-                this->arr.push_back(0);
+            bigNumber otherCopy = other;
+            if (otherCopy.arr[i] > arr[i]) {
+                arr[i] = otherCopy.arr[i] - arr[i];
+            } else if (otherCopy.arr[i] == arr[i]) {
+                arr[i] = 0;
             } else {
-                for ( quint i = 0 ; i < maxSize; ++i ) {
-                    if (arr[i] > otherCopy.arr[i]) {
-                        if (SIZE_OF_POINTER == 4) {
-                            tmp = 4294967294 - arr[i] + otherCopy.arr[i] + 1;
-                        }
-                        if (SIZE_OF_POINTER == 8) {
-                            tmp = 18446744073709551614 - arr[i] + otherCopy.arr[i] + 1;
-                        }
-                        otherCopy.arr[i + 1] -= 1;
-                    }
-
-                    if (arr[i] < otherCopy.arr[i]) {
-                        tmp = otherCopy.arr[i] - arr[i];
-                    }
-
-                    if (arr[i] == otherCopy.arr[i]) {
-                        tmp = 0;
-                    }
-                    this->arr[i] = tmp;
+                otherCopy.arr[i + 1] -= 1;
+                if (SIZE_OF_POINTER == 4) {
+                    arr[i] = MAX_INT - arr[i] + otherCopy.arr[i];
+                } else if (SIZE_OF_POINTER == 8) {
+                    arr[i] = MAX_ULONGLONG - arr[i] + otherCopy.arr[i] ;
                 }
-                isNegativeAnswer = false;
             }
+
         }
-
-    if (this->arr.size() == 1 && this->arr[0] == 0) isNegativeAnswer = false;
-
-    if (isNegativeAnswer) {
-        this->setNegative();
-    } else {
-        this->setPositive();
+        i++;
     }
 
+    if (overloaded) arr.push_back(1);
     return * this;
 }
 
