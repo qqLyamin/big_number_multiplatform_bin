@@ -19,46 +19,46 @@ private slots:
     void max64();
     void max32();
 
-//    //POSITIVE:
-//    void positiveSameNumbers();
-//    void ulongPlusOne();
-//    void positiveSameNumbersBig();
-//    void positiveDifferentNumbers();
-//    void positiveDifferentNumbersSwitched();
+    //POSITIVE:
+    void positiveSameNumbers();
+    void ulongPlusOne();
+    void positiveSameNumbersBig();
+    void positiveDifferentNumbers();
+    void positiveDifferentNumbersSwitched();
 
-//    //POSITIVE + NEGATIVE:
-//    void positiveNegative();
-//    void negativePositive();
+    //POSITIVE + NEGATIVE:
+    void positiveNegative();
+    void negativePositive();
 
-//    void positiveNegativeSwitched();
-//    void negativePositiveSwitched();
+    void positiveNegativeSwitched();
+    void negativePositiveSwitched();
 
-//    void positiveNegativeSame();
-//    void negativePositiveSame();
+    void positiveNegativeSame();
+    void negativePositiveSame();
 
-//    //TWO NEGATIVE:
-//    void negativeNegative();
-//    void negativeNegativeSwitched();
-//    void negativeSameNumbersBig();
-//    void negativeDifferentNumbersBig();
-//    void negativeNegativeSame();
+    //TWO NEGATIVE:
+    void negativeNegative();
+    void negativeNegativeSwitched();
+    void negativeSameNumbersBig();
+    void negativeDifferentNumbersBig();
+    void negativeNegativeSame();
 
-//    //TRASH WITH NORMAL:
-//    void trashPlusNormal();
-//    void normalPlusTrash();
-//    void trashPlusTrash();
+    //TRASH WITH NORMAL:
+    void trashPlusNormal();
+    void normalPlusTrash();
+    void trashPlusTrash();
 
-//    //ZEROS WITH OK:
-//    void zeroPlusOk();
-//    void okPlusZero();
-//    void zeroPlusZero();
+    //ZEROS WITH OK:
+    void zeroPlusOk();
+    void okPlusZero();
+    void zeroPlusZero();
 
-//    //EXTREMAL SITUATIONS:
-//    void ninesPlusOne();
-//    void ninesPlusOneSwitched();
-//    void millionPlusOneNegative();
-//    void millionPlusOneNegativeSwitched();
-//    void millionNegativePlusOnePositive();
+    //EXTREMAL SITUATIONS:
+    void ninesPlusOne();
+    void ninesPlusOneSwitched();
+    void millionPlusOneNegative();
+    void millionPlusOneNegativeSwitched();
+    void millionNegativePlusOnePositive();
 
 //DESIGN TIME CASES:
 //    void caseNines();

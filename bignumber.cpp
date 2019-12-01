@@ -56,9 +56,9 @@ ulonglong fromBinToDecimal( const QString & incomeNumber ) {
     ulonglong value = 0;
 
     int degree = incomeNumber.length() - 1;
-    for (int i = 0; i <= degree; ++i) {
+    for (int i = degree; i >= 0; --i) {
         if (incomeNumber[i] == '1') {
-            value += pow(2, degree - i);
+            value += static_cast<unsigned long long>(pow(2, i));
         }
     }
     return value;
@@ -77,83 +77,96 @@ bigNumber::bigNumber(const QString & income)
             }
         }
     }
-    QString incomeCopy = income;
-    if (isValid && this->isNegative()) incomeCopy.remove(0, 1);
 
-    QString binaryRow = "";
-    while (incomeCopy != '0') {
-        int i = 0;
-        while (i < SIZE_OF_POINTER * 8) {
+    if (isValid) {
+        QString incomeCopy = income;
+        if (isValid && this->isNegative()) incomeCopy.remove(0, 1);
 
-            if (even(incomeCopy)) {
-                binaryRow += "0";
-                divide(incomeCopy);
-            } else {
-                binaryRow += "1";
-                incomeCopy[incomeCopy.length() - 1] = static_cast<char>(((incomeCopy[incomeCopy.length() - 1].digitValue() - 1) + 48));
-                divide(incomeCopy);
+        QString binaryRow = "";
+        while (incomeCopy != '0') {
+            int i = 0;
+            int x = SIZE_OF_POINTER;
+            while (i < x * 8) {
+
+                if (even(incomeCopy)) {
+                    binaryRow += "0";
+                    divide(incomeCopy);
+                } else {
+                    binaryRow += "1";
+                    incomeCopy[incomeCopy.length() - 1] = static_cast<char>(((incomeCopy[incomeCopy.length() - 1].digitValue() - 1) + 48));
+                    divide(incomeCopy);
+                }
+                if (incomeCopy == '0') break;
+                i++;
             }
-            if (incomeCopy == '0') break;
-            i++;
-        }
 
-        arr.push_back(fromBinToDecimal(binaryRow));
-        binaryRow = "";
+            arr.push_back(fromBinToDecimal(binaryRow));
+            binaryRow = "";
+        }
+    } else {
+        this->Trash = true;
     }
 }
 
 bigNumber & bigNumber::operator+(const bigNumber & other)
 {
+    bool isNegativeAnswer;
+    //trash checking
     if (this->isTrash() || other.isTrash()) {
-        if (other.isTrash() && !this->isTrash()) return *this;
+        if (other.isTrash() && !this->isTrash()) {
+            return *this;
+        }
         if (!other.isTrash() && this->isTrash()) {
-            this->arr = other.arr;
-            this->Trash = other.Trash;
-            this->Negative = other.Negative;
-            this->arrStrBinary = other.arrStrBinary;
+            *this = other;
+            return *this;
         }
         if (other.isTrash() && this->isTrash()) {
-            this->arr.clear();
-            this->arr.push_back(0);
-            this->Negative = false;
-            this->Trash = Negative;
-            this->arrStrBinary.clear();
-            this->arrStrBinary.push_back("0");
+            *this = bigNumber("0");
+            return *this;
         }
     }
 
     //negative or positive answer
     if (this->isPositive() && other.isNegative()) {
-        if (*this > other || (*this &= other)) {
-            // do nothing
+        if (*this ->* other) {
+            isNegativeAnswer = false;
+        } else if (*this &= other) {
+            isNegativeAnswer = false;
         } else {
-            this->setNegative();
+            isNegativeAnswer = true;
         }
     }
     if (this->isNegative() && other.isPositive()) {
-        if (*this > other || (*this &= other)) {
-            // do nothing
+        if (*this ->* other) {
+            isNegativeAnswer = true;
+        } else if (*this &= other) {
+            isNegativeAnswer = false;
         } else {
-            this->setPositive();
+            isNegativeAnswer = false;
         }
     }
 
-    int overloaded = 0;
-    int i = 0;
+    if (this->isPositive() == other.isPositive()) {
+        isNegativeAnswer = this->Negative;
+    }
 
-    while (arr[i] != 0 && other.arr[i] != 0) {
+    int overloaded = 0;
+    int arr_size = arr.size();
+    int other_arr_size = other.arr.size();
+    int i = 0;
+    while (arr_size > i || other_arr_size > i) {
         if (this->isPositive() == other.isPositive()) { //если номера одного знака, то нам плевать какой больше
 
             if (SIZE_OF_POINTER == 4) {
 
-                unsigned long THIS;
+                unsigned long long THIS;
                 if (i < arr.size()) {
                     THIS = arr[i];
                 } else {
                     THIS = 0;
                 }
 
-                unsigned long OTHER;
+                unsigned long long OTHER;
                 if (i < other.arr.size()) {
                     OTHER = other.arr[i];
                 } else {
@@ -163,11 +176,20 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                 if (MAX_INT - THIS > OTHER) {
 
                     if (i <= arr.size()) {
-                        if (overloaded) {
-                            arr[i] = THIS + OTHER + 1;
-                            overloaded = 0;
+                        if (i < arr.size()) {
+                            if (overloaded) {
+                                arr[i] = THIS + OTHER + 1;
+                                overloaded = 0;
+                            } else {
+                                arr[i] = THIS + OTHER;
+                            }
                         } else {
-                            arr[i] = THIS + OTHER;
+                            if (overloaded) {
+                                arr.push_back(THIS + OTHER + 1);
+                                overloaded = 0;
+                            } else {
+                                arr.push_back(THIS + OTHER);
+                            }
                         }
                     } else {
                         if (overloaded) {
@@ -200,18 +222,65 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
 
             } else if (SIZE_OF_POINTER == 8) {
 
-                if (MAX_ULONGLONG - arr[i] > other.arr[i]) {
-                    if (overloaded) {
-                        arr[i] = arr[i] + other.arr[i] + 1;
-                        overloaded = 0;
-                    } else {
-                        arr[i] = arr[i] + other.arr[i];
-                    }
-                } else if (MAX_ULONGLONG - arr[i] == other.arr[i]) {
-                    arr[i] = MAX_ULONGLONG;
+                unsigned long long THIS;
+                if (i < arr.size()) {
+                    THIS = arr[i];
                 } else {
-                    arr[i] = other.arr[i] - (MAX_ULONGLONG - arr[i]) - 1;
-                    overloaded = 1;
+                    THIS = 0;
+                }
+
+                unsigned long long OTHER;
+                if (i < other.arr.size()) {
+                    OTHER = other.arr[i];
+                } else {
+                    OTHER = 0;
+                }
+
+                if (MAX_ULONGLONG - THIS > OTHER) {
+
+                    if (i <= arr.size()) {
+                        if (i < arr.size()) {
+                            if (overloaded) {
+                                arr[i] = THIS + OTHER + 1;
+                                overloaded = 0;
+                            } else {
+                                arr[i] = THIS + OTHER;
+                            }
+                        } else {
+                            if (overloaded) {
+                                arr.push_back(THIS + OTHER + 1);
+                                overloaded = 0;
+                            } else {
+                                arr.push_back(THIS + OTHER);
+                            }
+                        }
+                    } else {
+                        if (overloaded) {
+                            arr.push_back(THIS + OTHER + 1);
+                            overloaded = 0;
+                        } else {
+                            arr.push_back(THIS + OTHER);
+                        }
+                    }
+                } else if (MAX_ULONGLONG - THIS == OTHER && !overloaded) {
+                    if (i <= arr.size()) {
+                        arr[i] = MAX_ULONGLONG;
+                    } else {
+                        arr.push_back(MAX_ULONGLONG);
+                    }
+                } else {
+                    if (i <= arr.size()) {
+                        if (other.arr.size() > i) {
+                            arr[i] = OTHER - (MAX_ULONGLONG - THIS) - 1 + overloaded;
+                            overloaded = 1;
+                        } else {
+                            arr[i] = OTHER - (MAX_ULONGLONG - THIS) + overloaded;
+                            overloaded = 1;
+                        }
+                    } else {
+                        arr.push_back(OTHER - (MAX_ULONGLONG - THIS) - 1 + overloaded);
+                        overloaded = 1;
+                    }
                 }
 
             }
@@ -236,13 +305,11 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                 }
             }
 
-        } else if (*this == other) {
+        } else if (*this &= other) {
 
             this->arr.clear();
-            this->arr.push_back(0);
             this->setPositive();
             this->arrStrBinary.clear();
-            this->arrStrBinary.push_back("0");
 
         } else { // если other больше по модулю
 
@@ -265,12 +332,18 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
     }
 
     if (overloaded) arr.push_back(1);
+    if (isNegativeAnswer) {
+        this->setNegative();
+    } else {
+        this->setPositive();
+    }
     return * this;
 }
 
 bigNumber & bigNumber::operator=(const bigNumber & other)
 {
     Negative = other.Negative;
+    this->Trash = other.Trash;
     this->arr = other.arr;
     return * this;
 }
