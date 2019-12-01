@@ -9,15 +9,7 @@ class bigNumberTrying : public QObject
 {
     Q_OBJECT
 
-    int a;
-public:
-    bigNumberTrying();
-
 private slots:
-
-    //targeting:
-    void max64();
-    void max32();
 
     //POSITIVE:
     void positiveSameNumbers();
@@ -53,49 +45,16 @@ private slots:
     void okPlusZero();
     void zeroPlusZero();
 
-    //EXTREMAL SITUATIONS:
+    //BORDER SITUATIONS:
+    void max64();
+    void max64swithced();
+    void max32();
+    void max32switched();
+
     void ninesPlusOne();
     void ninesPlusOneSwitched();
     void millionPlusOneNegative();
     void millionPlusOneNegativeSwitched();
     void millionNegativePlusOnePositive();
 
-//DESIGN TIME CASES:
-//    void caseNines();
-//    void caseNinesSwitch();
-
-//    void caseNegativeNines();
-//    void caseNegativeNinesSwitch();
-
-//    void targetCase();
-//    void targetCase2();
-
-//    void caseOfMinus1();
-//    void caseOfMinus01();
-
-//    void caseOfTwoSameNumbers();
-//    void caseOfTwoSameNumbersWithDifferentSign();
-//    void caseOfTwoSameNumbersWithDifferentSign2();
-
-//    void caseOfTwoSameNumbersWithDifferentSignSwitched();
-//    void caseOfTwoSameNumbersWithDifferentSignSwitched2();
-
-//    void caseWithZeros();
-//    void caseWithWrongNumbers();
-
-//    void caseWithFirstNegative();
-//    void caseWithSecondNegative();
-
-//    void caseTwoBigNegative();
-//    void caseTwoBigPositive();
-
-//    void caseWithNegativeSignFirst();
-//    void caseWithNegativeSignSecond();
-//    void caseWithNegativeSignBoth();
-
-//    void caseWithFirstBigNegative();
-//    void caseWithSecondBigNegative();
-//    void caseWithNegativeSignBothBig();
-
-//    void caseWrongMinus();
 };

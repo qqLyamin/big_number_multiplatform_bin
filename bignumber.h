@@ -25,7 +25,7 @@ void invert_string( T & tmp ) {
 class bigNumber
 {
     std::vector<ulonglong> arr;
-    std::vector<QString> arrStrBinary;
+    std::vector<QString> arrStrBinary; //это можно спокойно удалить - не будет вывода, складывать будет по-прежнему
     bool Negative = false;
     bool Trash = false;
 public:

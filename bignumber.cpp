@@ -206,16 +206,11 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                         arr.push_back(MAX_INT);
                     }
                 } else {
-                    if (i <= arr.size()) {
-                        if (other.arr.size() > i) {
-                            arr[i] = OTHER - (MAX_INT - THIS) - 1;
-                            overloaded = 1;
-                        } else {
-                            arr[i] = OTHER - (MAX_INT - THIS);
-                            overloaded = 1;
-                        }
+                    if (i < arr.size()) {
+                        arr[i] = OTHER - (MAX_INT - THIS) - 1 + overloaded;
+                        overloaded = 1;
                     } else {
-                        arr.push_back(OTHER - (MAX_INT - THIS) - 1);
+                        arr.push_back(OTHER - (MAX_INT - THIS) - 1 + overloaded);
                         overloaded = 1;
                     }
                 }
@@ -269,18 +264,8 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
                         arr.push_back(MAX_ULONGLONG);
                     }
                 } else {
-                    if (i <= arr.size()) {
-                        if (other.arr.size() > i) {
-                            arr[i] = OTHER - (MAX_ULONGLONG - THIS) - 1 + overloaded;
-                            overloaded = 1;
-                        } else {
-                            arr[i] = OTHER - (MAX_ULONGLONG - THIS) + overloaded;
-                            overloaded = 1;
-                        }
-                    } else {
-                        arr.push_back(OTHER - (MAX_ULONGLONG - THIS) - 1 + overloaded);
-                        overloaded = 1;
-                    }
+                    arr[i] = OTHER - (MAX_ULONGLONG - THIS) - 1 + overloaded;
+                    overloaded = 1;
                 }
 
             }
@@ -444,17 +429,6 @@ bool operator==(const bigNumber &left, const bigNumber &right)
 
     return true;
 
-    //binary test
-//    if (left.Negative != right.Negative) return false;
-//    if (left.arr.size() != right.arr.size()) return false;
-//    QString leftStr = "";
-//    QString rightStr = "";
-//    for (int i = left.arrStrBinary.size() - 1; i >= 0; --i) {
-//        if (left.arr[i] != right.arr[i]) {
-//            return false;
-//        }
-//    }
-//    return true;
 }
 
 bool operator&=(const bigNumber &left, const bigNumber &right)
