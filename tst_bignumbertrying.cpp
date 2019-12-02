@@ -43,6 +43,28 @@ void bigNumberTrying::max32switched()
     QCOMPARE(test.getSumm(A, B), result);
 }
 
+void bigNumberTrying::negativeMax64()
+{
+    bigNumber A = bigNumber("-1");
+    bigNumber B = bigNumber("18446744073709551616");
+    bigNumber result = bigNumber("18446744073709551615");
+    biSumms test = biSumms();
+    bigNumber result2 = test.getSumm(A, B);
+
+    QCOMPARE(test.getSumm(A, B), result);
+}
+
+void bigNumberTrying::negativeMax32()
+{
+    bigNumber A = bigNumber("-1");
+    bigNumber B = bigNumber("4294967296");
+    bigNumber result = bigNumber("4294967295");
+    biSumms test = biSumms();
+    bigNumber result2 = test.getSumm(A, B);
+
+    QCOMPARE(test.getSumm(A, B), result);
+}
+
 
 //POSITIVE:
 void bigNumberTrying::positiveSameNumbers()

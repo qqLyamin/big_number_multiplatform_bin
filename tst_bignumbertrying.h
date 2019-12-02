@@ -51,6 +51,9 @@ private slots:
     void max32();
     void max32switched();
 
+    void negativeMax64();
+    void negativeMax32();
+
     void ninesPlusOne();
     void ninesPlusOneSwitched();
     void millionPlusOneNegative();

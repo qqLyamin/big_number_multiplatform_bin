@@ -154,7 +154,8 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
     int arr_size = arr.size();
     int other_arr_size = other.arr.size();
     int i = 0;
-    while (arr_size > i || other_arr_size > i) {
+    bool done;
+    while (!done && (arr_size > i || other_arr_size > i)) {
         if (this->isPositive() == other.isPositive()) { //если номера одного знака, то нам плевать какой больше
 
             if (SIZE_OF_POINTER == 4) {
@@ -273,49 +274,72 @@ bigNumber & bigNumber::operator+(const bigNumber & other)
             i++;
             continue;
 
+        } else {
+            if (*this ->* other) { //выясняем какой больше по модулю
+
+                if (arr[i] > other.arr[i]) {
+                    arr[i] = arr[i] - other.arr[i];
+                } else if (arr[i] == other.arr[i]) {
+                    arr[i] = 0;
+                } else {
+                    arr[i + 1] -= 1;
+                    if (SIZE_OF_POINTER == 4) {
+                        arr[i] = MAX_INT - other.arr[i] + arr[i];
+                    } else if (SIZE_OF_POINTER == 8) {
+                        arr[i] = MAX_ULONGLONG - other.arr[i] + arr[i];
+                    }
+                }
+
+            } else if (*this &= other) {
+
+                this->arr.clear();
+                this->setPositive();
+                this->arrStrBinary.clear();
+
+            } else { // если other больше по модулю
+
+                bigNumber otherCopy = other;
+                if (otherCopy.arr[i] > arr[i]) {
+                    otherCopy.arr[i] = otherCopy.arr[i] - arr[i];
+                } else if (otherCopy.arr[i] == arr[i]) {
+                    otherCopy.arr[i] = 0;
+                } else {
+
+                    int j = i;
+                    while (otherCopy.arr[j] == 0) {
+                        j++;
+                    }
+                    otherCopy.arr[j] -= 1;
+
+                    j -= 1;
+                    while (j > i) {
+                        if (SIZE_OF_POINTER == 4) {
+                            otherCopy.arr[j] = MAX_INT;
+                        } else if (SIZE_OF_POINTER == 8) {
+                            otherCopy.arr[i] = MAX_ULONGLONG;
+                        }
+                        j--;
+                    }
+
+                    if (SIZE_OF_POINTER == 4) {
+                        otherCopy.arr[i] = MAX_INT - arr[i] + otherCopy.arr[i] + 1;
+                    } else if (SIZE_OF_POINTER == 8) {
+                        otherCopy.arr[i] = MAX_ULONGLONG - arr[i] + otherCopy.arr[i] + 1;
+                    }
+
+                    for (int q = otherCopy.arr.size() - 1; q > 0; --q) {
+                        if (otherCopy.arr[q] != 0) break;
+                        otherCopy.arr.pop_back();
+
+                    }
+                }
+                *this = otherCopy;
+                done = true;
+            }
+            i++;
         }
 
-        if (*this ->* other) { //выясняем какой больше по модулю
-
-            if (arr[i] > other.arr[i]) {
-                arr[i] = arr[i] - other.arr[i];
-            } else if (arr[i] == other.arr[i]) {
-                arr[i] = 0;
-            } else {
-                arr[i + 1] -= 1;
-                if (SIZE_OF_POINTER == 4) {
-                    arr[i] = MAX_INT - other.arr[i] + arr[i];
-                } else if (SIZE_OF_POINTER == 8) {
-                    arr[i] = MAX_ULONGLONG - other.arr[i] + arr[i];
-                }
-            }
-
-        } else if (*this &= other) {
-
-            this->arr.clear();
-            this->setPositive();
-            this->arrStrBinary.clear();
-
-        } else { // если other больше по модулю
-
-            bigNumber otherCopy = other;
-            if (otherCopy.arr[i] > arr[i]) {
-                arr[i] = otherCopy.arr[i] - arr[i];
-            } else if (otherCopy.arr[i] == arr[i]) {
-                arr[i] = 0;
-            } else {
-                otherCopy.arr[i + 1] -= 1;
-                if (SIZE_OF_POINTER == 4) {
-                    arr[i] = MAX_INT - arr[i] + otherCopy.arr[i];
-                } else if (SIZE_OF_POINTER == 8) {
-                    arr[i] = MAX_ULONGLONG - arr[i] + otherCopy.arr[i] ;
-                }
-            }
-
-        }
-        i++;
     }
-
     if (overloaded) arr.push_back(1);
     if (isNegativeAnswer) {
         this->setNegative();
